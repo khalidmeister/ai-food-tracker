@@ -1,34 +1,34 @@
-# 🥗 AI Meal Tracker (Polisi Makan)
+# 🥗 AI Meal Tracker (Food Police)
 
-Aplikasi pelacak makanan berbasis AI yang berjalan **lokal**. Upload foto piring makananmu, lalu AI akan mengenali menu, bahan-bahan, perkiraan berat, dan memberi **peringatan** kalau makananmu mengandung **gorengan** atau **santan**. Semua hasil otomatis di-log ke Google Sheets dan bisa dilihat sebagai laporan mingguan.
+An AI-powered food tracker that runs **locally**. Upload a photo of your meal and the AI identifies the dish, its ingredients, and estimated weights, then raises an **alert** if the meal contains **fried food** or **santan** (coconut milk). Every result is automatically logged to Google Sheets and summarized in a weekly analytics dashboard.
 
-## ✨ Fitur
+## ✨ Features
 
-- 📷 **Upload & analisis foto makanan** (JPG, PNG, HEIC)
-- 🧠 **Deteksi komponen makanan** (nama menu, tag cara masak, bahan, estimasi gram) menggunakan Apple Foundation Model
-- 🚨 **Rule engine "Polisi Makan"**: alert otomatis untuk gorengan (minyak jenuh) dan santan (kolesterol jenuh)
-- 📝 **Auto-log ke Google Sheets** sebagai database riwayat makan
-- 📊 **Weekly analytics**: ringkasan 7 hari terakhir, grafik harian gorengan vs santan, dan tabel riwayat
+- 📷 **Meal photo upload and analysis** (JPG, PNG, HEIC)
+- 🧠 **Food component detection** (dish name, preparation tags, ingredients, estimated grams) using Apple Foundation Model
+- 🚨 **"Food Police" rule engine**: automatic alerts for fried food (high saturated oil) and santan (saturated cholesterol)
+- 📝 **Auto-logging to Google Sheets** as the meal history database
+- 📊 **Weekly analytics**: 7-day summary metrics, a daily fried vs. santan chart, and a clean history table
 
-## 🏗️ Arsitektur
+## 🏗️ Architecture
 
-![Arsitektur](architecture.png)
+![Architecture](architecture.png)
 
-| Komponen | Peran |
+| Component | Role |
 |---|---|
-| **Streamlit** | User interface (upload foto, tampilkan hasil, dashboard analytics) |
-| **FastAPI** | Backend API lokal yang mengatur alur analisis, rule engine, dan logging |
-| **Apple Foundation Model** | LLM (via `fm` CLI) untuk membaca gambar dan menghasilkan output JSON |
-| **Google Sheets** | Database untuk food log hasil analisis LLM |
+| **Streamlit** | User interface (photo upload, results, analytics dashboard) |
+| **FastAPI** | Local backend API that orchestrates analysis, the rule engine, and logging |
+| **Apple Foundation Model** | LLM (via the `fm` CLI) that reads the image and generates the JSON output |
+| **Google Sheets** | Database for the food log produced from the LLM output |
 
-### Alur kerja
+### Workflow
 
-1. User upload foto di Streamlit.
-2. Streamlit mengirim file ke `POST /analyze` di FastAPI.
-3. FastAPI menyimpan file sementara, lalu menjalankan `fm respond --image ... --text <prompt>`.
-4. Output JSON dari model dibersihkan dan divalidasi (Pydantic), lalu dicek oleh rule engine (gorengan / santan).
-5. Hasil di-append ke Google Sheets dan dikembalikan ke Streamlit.
-6. Tab **Weekly Analytics** membaca langsung dari Google Sheets untuk membuat grafik dan metrik.
+1. The user uploads a photo in Streamlit.
+2. Streamlit sends the file to `POST /analyze` on FastAPI.
+3. FastAPI saves the file temporarily and runs `fm respond --image ... --text <prompt>`.
+4. The model's JSON output is cleaned and validated (Pydantic), then checked by the rule engine (fried / santan).
+5. The result is appended to Google Sheets and returned to Streamlit.
+6. The **Weekly Analytics** tab reads directly from Google Sheets to build the charts and metrics.
 
 ## 🛠️ Tech Stack
 
@@ -36,22 +36,22 @@ Aplikasi pelacak makanan berbasis AI yang berjalan **lokal**. Upload foto piring
 - **Backend:** FastAPI, Uvicorn, Pydantic
 - **AI:** Apple Foundation Model (`fm` CLI)
 - **Storage:** Google Sheets (`gspread`, `oauth2client`)
-- **Image:** Pillow, `pillow-heif` (dukungan HEIC dari iPhone)
+- **Images:** Pillow, `pillow-heif` (HEIC support for iPhone photos)
 
-## 📋 Prasyarat
+## 📋 Prerequisites
 
-- Mac dengan **Apple Intelligence** aktif dan **`fm` CLI** terpasang (pastikan perintah `fm respond` bisa dijalankan di terminal)
+- A Mac with **Apple Intelligence** enabled and the **`fm` CLI** installed (make sure `fm respond` runs in your terminal)
 - Python 3.10+
-- Akun Google dengan **Service Account** (file `credentials.json`)
+- A Google account with a **Service Account** (`credentials.json`)
 
-## 🚀 Instalasi
+## 🚀 Installation
 
 ```bash
-# 1. Clone repo
-git clone <url-repo-kamu>
-cd <nama-folder-project>
+# 1. Clone the repo
+git clone <your-repo-url>
+cd <your-project-folder>
 
-# 2. Buat virtual environment
+# 2. Create a virtual environment
 python -m venv venv
 source venv/bin/activate
 
@@ -75,30 +75,30 @@ plotly
 pillow-heif
 ```
 
-## 🔑 Setup Google Sheets
+## 🔑 Google Sheets Setup
 
-1. Buka [Google Cloud Console](https://console.cloud.google.com/), buat project, lalu aktifkan **Google Sheets API** dan **Google Drive API**.
-2. Buat **Service Account**, lalu download key-nya dalam format JSON dan simpan sebagai `credentials.json` di root project.
-3. Buat Google Spreadsheet dengan judul **`Food Tracking Assistant`** dan worksheet bernama **`Sheet1`**.
-4. **Share** spreadsheet tersebut ke email service account (`...@...iam.gserviceaccount.com`) dengan akses **Editor**.
-5. Isi baris pertama (header) dengan urutan kolom berikut:
+1. Open the [Google Cloud Console](https://console.cloud.google.com/), create a project, and enable the **Google Sheets API** and **Google Drive API**.
+2. Create a **Service Account**, download its JSON key, and save it as `credentials.json` in the project root.
+3. Create a Google Spreadsheet titled **`Food Tracking Assistant`** with a worksheet named **`Sheet1`**.
+4. **Share** the spreadsheet with the service account email (`...@...iam.gserviceaccount.com`) with **Editor** access.
+5. Fill the first row (header) with these columns, in this order:
 
 | A | B | C | D | E | F |
 |---|---|---|---|---|---|
 | `Timestamp` | `menu_name` | `preparation_tag` | `Has Fried` | `Has Santan` | `raw_json` |
 
-### Environment variables (opsional)
+### Environment variables (optional)
 
-| Variable | Default | Keterangan |
+| Variable | Default | Description |
 |---|---|---|
-| `GOOGLE_CREDENTIALS_PATH` | `credentials.json` | Lokasi file credentials service account |
-| `GOOGLE_SHEETS_NAME` | `Food Tracking Assistant` | Nama spreadsheet yang dipakai backend |
+| `GOOGLE_CREDENTIALS_PATH` | `credentials.json` | Path to the service account credentials file |
+| `GOOGLE_SHEETS_NAME` | `Food Tracking Assistant` | Spreadsheet name used by the backend |
 
-> ⚠️ **Jangan commit `credentials.json` ke Git.** Tambahkan ke `.gitignore`.
+> ⚠️ **Never commit `credentials.json` to Git.** Add it to `.gitignore`.
 
-## ▶️ Menjalankan Aplikasi
+## ▶️ Running the App
 
-Jalankan backend dan frontend di dua terminal terpisah.
+Run the backend and frontend in two separate terminals.
 
 **Terminal 1: FastAPI backend**
 
@@ -112,9 +112,9 @@ uvicorn main:app --reload --port 8000
 streamlit run app.py
 ```
 
-Lalu buka `http://localhost:8501`. Kalau backend jalan di alamat lain, ubah **API Base URL** di sidebar (default: `http://localhost:8000`).
+Then open `http://localhost:8501`. If the backend runs on a different address, change the **API Base URL** in the sidebar (default: `http://localhost:8000`).
 
-> Sesuaikan `main.py` dan `app.py` dengan nama file di project kamu.
+> Adjust `main.py` and `app.py` to match your actual file names.
 
 ## 🔌 API Reference
 
@@ -126,10 +126,10 @@ Health check.
 ```
 
 ### `POST /analyze`
-Menganalisis foto makanan.
+Analyzes a meal photo.
 
-- **Body:** `multipart/form-data` dengan field `file` (gambar)
-- **Contoh:**
+- **Body:** `multipart/form-data` with a `file` field (image)
+- **Example:**
 
 ```bash
 curl -X POST http://localhost:8000/analyze \
@@ -156,37 +156,37 @@ curl -X POST http://localhost:8000/analyze \
 }
 ```
 
-## 📁 Struktur Project
+## 📁 Project Structure
 
 ```
 .
 ├── app.py              # Streamlit UI (upload & weekly analytics)
-├── main.py             # FastAPI backend (analisis, rule engine, logging)
-├── credentials.json    # Service account Google (JANGAN di-commit)
-├── architecture.png    # Diagram arsitektur
+├── main.py             # FastAPI backend (analysis, rule engine, logging)
+├── credentials.json    # Google service account (DO NOT commit)
+├── architecture.png    # Architecture diagram
 ├── requirements.txt
 └── README.md
 ```
 
 ## 🧪 Rule Engine
 
-| Kondisi | Peringatan |
+| Condition | Warning |
 |---|---|
-| Ada bahan `is_fried = true` | 🚨 **GORENGAN DETECTED:** Minyak jenuh tinggi! |
-| Ada bahan `contains_santan = true` | 🚨 **SANTAN DETECTED:** Hati-hati kolesterol jenuh! |
-| Tidak ada keduanya | ✅ Safe meal! |
+| Any ingredient has `is_fried = true` | 🚨 **GORENGAN DETECTED:** Minyak jenuh tinggi! *(high saturated oil)* |
+| Any ingredient has `contains_santan = true` | 🚨 **SANTAN DETECTED:** Hati-hati kolesterol jenuh! *(watch out for saturated cholesterol)* |
+| Neither | ✅ Safe meal! |
 
 ## 🩹 Troubleshooting
 
-- **`Failed to process image with fm CLI`**: pastikan `fm` terpasang, Apple Intelligence aktif, dan perintah `fm respond` jalan manual di terminal.
-- **`Gagal koneksi ke API`**: cek apakah FastAPI sudah jalan dan **API Base URL** di sidebar sudah benar.
-- **Data tidak masuk ke Sheets**: cek apakah spreadsheet sudah di-share ke email service account dan path `credentials.json` benar. Error logging Sheets hanya tampil sebagai warning di log backend.
-- **`Error parse sheet`** di tab analytics: pastikan header sheet sesuai dengan 6 kolom di atas.
+- **`Failed to process image with fm CLI`**: make sure `fm` is installed, Apple Intelligence is enabled, and `fm respond` works manually in the terminal.
+- **Connection error to the API**: check that FastAPI is running and the **API Base URL** in the sidebar is correct.
+- **Data not appearing in Sheets**: confirm the spreadsheet is shared with the service account email and the `credentials.json` path is correct. Sheets logging errors only show up as warnings in the backend log.
+- **`Error parse sheet`** in the analytics tab: make sure the sheet header matches the 6 columns above.
 
 ## ⚠️ Disclaimer
 
-Estimasi bahan dan berat berasal dari output model AI dan **bukan pengganti saran ahli gizi atau dokter**.
+Ingredient and weight estimates come from an AI model's output and are **not a substitute for advice from a nutritionist or doctor**.
 
-## 📄 Lisensi
+## 📄 License
 
-Tambahkan lisensi sesuai kebutuhan (misalnya MIT).
+Add a license of your choice (e.g. MIT).
