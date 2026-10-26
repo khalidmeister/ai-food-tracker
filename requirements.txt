@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pydantic
+gspread
+oauth2client
+python-multipart
+streamlit
+requests
+pandas
+plotly
+pillow-heif
